@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: User Activity Tracker
+ * Plugin Name: LSM User Activity Tracker
  * Description: Tracks user post views, activity, and profile changes.
  * Version: 1.0.0
  * Author: Leadstart Media, Inc.
@@ -460,20 +460,23 @@ function uat_display_combined_data_shortcode($atts) {
         $datetime = new DateTime("@$timestamp");
         $datetime->setTimezone($timezone);
 
-        $date = $datetime->format('Y-m-d');
-        $time = $datetime->format('H:i:s');
+        //$date = $datetime->format('Y-m-d');
+        //$time = $datetime->format('H:i:s');
+        $day_of_week = $datetime->format('D'); // Abbreviated day of the week
+        $date = $datetime->format('F j, Y'); // Month Day, Year
+        $time = $datetime->format('h:i:s A');
         $type = esc_html($item['type']);
         $data = $item['data'];
 
         switch ($type) {
             case 'view':
-                $output .= $date . ' ' . $time . ' - Viewed: <a href="' . esc_url($data['post_url']) . '">' . esc_html($data['post_title']) . '</a> <small>(' . esc_html($data['post_type']) . ')</small>';
+                $output .= $day_of_week. ' ' . $date . ' ' . $time . ' - Viewed: <a href="' . esc_url($data['post_url']) . '">' . esc_html($data['post_title']) . '</a> <small>(' . esc_html($data['post_type']) . ')</small>';
                 break;
             case 'activity':
-                $output .= $date . ' ' . $time . ' - ' . esc_html($data['action']) . ' <a href="' . get_permalink($data['post_id']) . '">' . esc_html($data['post_title']) . '</a> <small>(' . esc_html($data['post_type']) . ', ' . esc_html($data['post_status']) . ')</small>';
+                $output .= $day_of_week. ' ' . $date . ' ' . $time . ' - ' . esc_html($data['action']) . ' <a href="' . get_permalink($data['post_id']) . '">' . esc_html($data['post_title']) . '</a> <small>(' . esc_html($data['post_type']) . ', ' . esc_html($data['post_status']) . ')</small>';
                 break;
             case 'profile_change':
-                $output .= $date . ' ' . $time . ' - Profile Changed: ';
+                $output .= $day_of_week. ' ' . $date . ' ' . $time . ' - Profile Changed: ';
 
                 if ($data['old_display_name'] !== $data['display_name']) {
                     $output .= 'Display Name: ' . esc_html($data['display_name']) . '<br>';
@@ -514,13 +517,13 @@ function uat_display_combined_data_shortcode($atts) {
                 }
                 break;
             case 'login':
-                $output .= $date . ' ' . $time . ' - Login (IP: ' . esc_html($data['ip_address']) . ')';
+                $output .= $day_of_week. ' ' . $date . ' ' . $time . ' - Login (IP: ' . esc_html($data['ip_address']) . ')';
                 break;
             case 'logout':
-                $output .= $date . ' ' . $time . ' - Logout';
+                $output .= $day_of_week. ' ' . $date . ' ' . $time . ' - Logout';
                 break;
             case 'purchase':
-                $output .= $date . ' ' . $time . ' - Purchased: ' . esc_html($data['name']) . ' (x' . esc_html($data['quantity']) . '), Product ID: ' . esc_html($data['product_id']) . ' <small>(' . esc_html($data['post_type']) . ')</small>';
+                $output .= $day_of_week. ' ' . $date . ' ' . $time . ' - Purchased: ' . esc_html($data['name']) . ' (x' . esc_html($data['quantity']) . '), Product ID: ' . esc_html($data['product_id']) . ' <small>(' . esc_html($data['post_type']) . ')</small>';
                 break;
         }
 
