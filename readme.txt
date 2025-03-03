@@ -5,7 +5,7 @@ Requires at least: 5.0
 Tested up to: 6.7.1
 Requires PHP: 7.0
 License: GPLv2 or later
-Tags: user activity, user tracking, post views, profile changes, login tracking, purchase tracking, woocommerce
+Tags: user activity, user tracking, profile changes, login tracking, purchase tracking
 
 Tracks user activity on your WordPress site, including post views, post activity, profile changes, login/logout events, and WooCommerce purchases.
 
