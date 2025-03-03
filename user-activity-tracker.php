@@ -116,9 +116,12 @@ function uat_track_user_profile_changes($user_id) {
 
     // Get old values or set defaults if they don't exist
     $old_display_name = get_user_meta($user_id, '_uat_old_display_name', true) ?: '';
+    $old_nickname = get_user_meta($user_id, '_uat_old_nickname', true) ?: '';
+    $old_nicename = get_user_meta($user_id, '_uat_old_nicename', true) ?: '';
     $old_social_meta = get_user_meta($user_id, '_uat_old_social_meta', true) ?: array();
     $old_bio = get_user_meta($user_id, '_uat_old_bio', true) ?: '';
     $old_website = get_user_meta($user_id, '_uat_old_website', true) ?: '';
+    $old_contact_methods = get_user_meta($user_id, '_uat_old_contact_methods', true) ?: array();
 
     // Get all social metadata
     $social_meta = array(
@@ -140,15 +143,20 @@ function uat_track_user_profile_changes($user_id) {
         'skype' => get_user_meta($user_id, 'skype', true),
     );
 
-    $bio = $user->description; // User's bio
-    $website = $user->user_url; // User's website
+    $bio = $user->description;
+    $website = $user->user_url;
+    $nickname = $user->nickname;
+    $nicename = $user->user_nicename;
 
-    // Use empty array as a default for social meta
-    if (!is_array($old_social_meta)){
-        $old_social_meta = array();
+    //Get contact methods
+    $contact_methods = apply_filters('user_contactmethods', array(), $user);
+
+    $user_contact_values = array();
+    foreach($contact_methods as $key => $label){
+        $user_contact_values[$key] = get_user_meta($user_id, $key, true);
     }
 
-    if ($old_display_name !== $user->display_name || serialize($old_social_meta) !== serialize($social_meta) || $old_bio !== $bio || $old_website !== $website) {
+    if ($old_display_name !== $user->display_name || $old_nickname !== $nickname || $old_nicename !== $nicename || serialize($old_social_meta) !== serialize($social_meta) || $old_bio !== $bio || $old_website !== $website || serialize($old_contact_methods) !== serialize($user_contact_values)) {
         // Log the change
         $timezone = new DateTimeZone('America/New_York');
         $datetime = new DateTime('now', $timezone);
@@ -156,13 +164,19 @@ function uat_track_user_profile_changes($user_id) {
         $change_log = array(
             'timestamp' => $timestamp,
             'display_name' => $user->display_name,
+            'nickname' => $nickname,
+            'nicename' => $nicename,
             'social_meta' => $social_meta,
             'bio' => $bio,
             'website' => $website,
+            'contact_methods' => $user_contact_values,
             'old_display_name' => $old_display_name,
+            'old_nickname' => $old_nickname,
+            'old_nicename' => $old_nicename,
             'old_social_meta' => $old_social_meta,
             'old_bio' => $old_bio,
             'old_website' => $old_website,
+            'old_contact_methods' => $old_contact_methods,
         );
 
         $user_profile_changes = get_user_meta($user_id, 'user_profile_changes', true);
@@ -177,9 +191,12 @@ function uat_track_user_profile_changes($user_id) {
 
         // Update the old values for future comparison
         update_user_meta($user_id, '_uat_old_display_name', $user->display_name);
+        update_user_meta($user_id, '_uat_old_nickname', $nickname);
+        update_user_meta($user_id, '_uat_old_nicename', $nicename);
         update_user_meta($user_id, '_uat_old_social_meta', $social_meta);
         update_user_meta($user_id, '_uat_old_bio', $bio);
         update_user_meta($user_id, '_uat_old_website', $website);
+        update_user_meta($user_id, '_uat_old_contact_methods', $user_contact_values);
     }
 }
 add_action('profile_update', 'uat_track_user_profile_changes');
@@ -446,6 +463,12 @@ function uat_display_combined_data_shortcode($atts) {
                 if ($data['old_display_name'] !== $data['display_name']) {
                     $output .= 'Display Name: ' . esc_html($data['display_name']) . '<br>';
                 }
+                if ($data['old_nickname'] !== $data['nickname']) {
+                    $output .= 'Nickname: ' . esc_html($data['nickname']) . '<br>';
+                }
+                if ($data['old_nicename'] !== $data['nicename']) {
+                    $output .= 'Nicename: ' . esc_html($data['nicename']) . '<br>';
+                }
                 if ($data['old_bio'] !== $data['bio']) {
                     $output .= 'Bio: ' . esc_html($data['bio']) . '<br>';
                 }
@@ -455,9 +478,23 @@ function uat_display_combined_data_shortcode($atts) {
 
                 foreach ($data['social_meta'] as $key => $value) {
                     if (isset($data['old_social_meta'][$key]) && $data['old_social_meta'][$key] !== $value) {
+                        if (!empty($value)) {
+                            $output .= esc_html(ucfirst($key)) . ': ' . esc_html($value) . '<br>';
+                        }
+                    } elseif (!isset($data['old_social_meta'][$key]) && !empty($value)) {
                         $output .= esc_html(ucfirst($key)) . ': ' . esc_html($value) . '<br>';
-                    } elseif (!isset($data['old_social_meta'][$key]) && $value){
-                        $output .= esc_html(ucfirst($key)) . ': ' . esc_html($value) . '<br>';
+                    }
+                }
+
+                // Display Contact Methods
+                $contact_methods = apply_filters('user_contactmethods', array(), get_userdata($atts['user_id']));
+                foreach ($data['contact_methods'] as $key => $value) {
+                    if (isset($data['old_contact_methods'][$key]) && $data['old_contact_methods'][$key] !== $value) {
+                        if (!empty($value)) {
+                            $output .= esc_html($contact_methods[$key]) . ': ' . esc_html($value) . '<br>';
+                        }
+                    } elseif (!isset($data['old_contact_methods'][$key]) && !empty($value)) {
+                        $output .= esc_html($contact_methods[$key]) . ': ' . esc_html($value) . '<br>';
                     }
                 }
                 break;
