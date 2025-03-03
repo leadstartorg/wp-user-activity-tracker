@@ -1,4 +1,4 @@
-=== User Activity Tracker ===
+=== LSM User Activity Tracker ===
 Contributors: Leadstart Media, Inc.
 Stable tag: 1.0.0
 Requires at least: 5.0
