@@ -4,6 +4,7 @@
  * Description: Tracks user post views, activity, and profile changes.
  * Version: 1.0.0
  * Author: Leadstart Media, Inc.
+ * License: GPL-2.0-or-later
  */
 
 /**
@@ -209,10 +210,11 @@ function uat_track_wsl_login_activity($user_id) {
     $timezone = new DateTimeZone('America/New_York');
     $datetime = new DateTime('now', $timezone);
     $timestamp = $datetime->format('Y-m-d H:i:s');
+    $ip_address = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
 
     $login_data = array(
         'timestamp' => $timestamp,
-        'ip_address' => $_SERVER['REMOTE_ADDR'], // Get user's IP address
+        'ip_address' => $ip_address, // Get user's IP address
     );
 
     $user_logins = get_user_meta($user_id, 'user_logins', true);
@@ -240,10 +242,12 @@ function uat_track_login_activity($user_login, $user) {
     $timezone = new DateTimeZone('America/New_York');
     $datetime = new DateTime('now', $timezone);
     $timestamp = $datetime->format('Y-m-d H:i:s');
+    $ip_address = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+
 
     $login_data = array(
         'timestamp' => $timestamp,
-        'ip_address' => $_SERVER['REMOTE_ADDR'], // Get user's IP address
+        'ip_address' => $ip_address, // Get user's IP address
     );
 
     $user_logins = get_user_meta($user_id, 'user_logins', true);
@@ -444,9 +448,20 @@ function uat_display_combined_data_shortcode($atts) {
 
     foreach ($combined_data as $item) {
         $output .= '<li>';
-        $timestamp = esc_html($item['timestamp']);
-        $date = date('Y-m-d', strtotime($timestamp));
-        $time = date('H:i:s', strtotime($timestamp));
+        //$timestamp = esc_html($item['timestamp']);
+        //$date = date('Y-m-d', strtotime($timestamp));
+        //$time = date('H:i:s', strtotime($timestamp));
+        //$type = esc_html($item['type']);
+        //$data = $item['data'];
+
+        $timestamp = strtotime($item['timestamp']);
+
+        $timezone = new DateTimeZone('America/New_York');
+        $datetime = new DateTime("@$timestamp");
+        $datetime->setTimezone($timezone);
+
+        $date = $datetime->format('Y-m-d');
+        $time = $datetime->format('H:i:s');
         $type = esc_html($item['type']);
         $data = $item['data'];
 
