@@ -15,17 +15,17 @@ This plugin provides comprehensive tracking of user activity on your WordPress s
 
 Key Features:
 
-* **Post View Tracking:** Records detailed information about posts viewed by logged-in users, including timestamp, post ID, title, URL, author, and more.
-* **Post Activity Tracking:** Logs post creation and update events, including timestamps, post status, and author roles.
-* **Profile Change Tracking:** Monitors changes to user profiles, including display name, social metadata, bio, and website.
-* **Login/Logout Tracking:** Records login and logout events, including timestamps and IP addresses.
-* **WooCommerce Purchase Tracking:** Logs WooCommerce purchases, including product names, quantities, product IDs, and post types.
-* **Combined Activity Display:** Provides a shortcode to display all tracked activities in a single, time-sorted list.
-* **Eastern Time Zone:** All timestamps are recorded in the Eastern Time Zone.
-* **Data Limiting:** Limits the number of stored entries for each activity type to prevent database bloat.
-* **Social Login Compatibility:** Works with the WordPress Social Login plugin.
-* **WooCommerce and WordPress.com Compatibility:** Tracks logins from WooCommerce and WordPress.com.
-* **Privacy Focused:** No order id's are shown in the purchase logs.
+* Post View Tracking: Records detailed information about posts viewed by logged-in users, including timestamp, post ID, title, URL, author, and more.
+* Post Activity Tracking: Logs post creation and update events, including timestamps, post status, and author roles.
+* Profile Change Tracking: Monitors changes to user profiles, including display name, social metadata, bio, and website.
+* Login/Logout Tracking: Records login and logout events, including timestamps and IP addresses.
+* WooCommerce Purchase Tracking: Logs WooCommerce purchases, including product names, quantities, product IDs, and post types.
+* Combined Activity Display: Provides a shortcode to display all tracked activities in a single, time-sorted list.
+* Eastern Time Zone: All timestamps are recorded in the Eastern Time Zone.
+* Data Limiting: Limits the number of stored entries for each activity type to prevent database bloat.
+* Social Login Compatibility: Works with the WordPress Social Login plugin.
+* WooCommerce and WordPress.com Compatibility: Tracks logins from WooCommerce and WordPress.com.
+* Privacy Focused: No order id's are shown in the purchase logs.
 
 Shortcode:
 
