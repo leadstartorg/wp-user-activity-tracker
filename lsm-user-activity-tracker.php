@@ -7,10 +7,13 @@
  * License: GPL-2.0-or-later
  */
 
+// Exit if accessed directly
+if (!defined('ABSPATH')) exit;
+
 /**
  * Post Views with User Metadata (Eastern Time, Limited to 10).
  */
-function uat_set_user_view() {
+function lsm_uat_set_user_view() {
     $post_id = get_the_ID();
     $user_id = get_current_user_id();
 
@@ -34,7 +37,7 @@ function uat_set_user_view() {
             'timestamp_viewed' => $timestamp_viewed, // Use the correct variable here
         );
 
-        $user_views = get_user_meta($user_id, 'user_post_views', true);
+        $user_views = get_user_meta($user_id, 'lsm_uat_user_post_views', true);
 
         if (empty($user_views) || !is_array($user_views)) {
             $user_views = array();
@@ -47,11 +50,11 @@ function uat_set_user_view() {
             array_shift($user_views); // Remove the oldest entry
         }
 
-        update_user_meta($user_id, 'user_post_views', $user_views);
+        update_user_meta($user_id, 'lsm_uat_user_post_views', $user_views);
     }
 }
-add_action('wp_head', 'uat_trigger_set_user_view');
-function uat_trigger_set_user_view() {
+add_action('wp_head', 'lsm_uat_trigger_set_user_view');
+function lsm_uat_trigger_set_user_view() {
     // Only run on singular posts/pages
     if (is_singular()) {
         $post_id = get_the_ID();
@@ -62,12 +65,12 @@ function uat_trigger_set_user_view() {
         }
         
         // Create a unique key for this post view
-        $view_key = 'post_view_' . $post_id;
+        $view_key = 'lsm_uat_post_view_' . $post_id;
         
         // Check if this post has been viewed in this session recently
         if (!isset($_SESSION[$view_key]) || (time() - $_SESSION[$view_key]) > 60) {
             // Only record view once every 60 seconds for the same post
-            uat_set_user_view();
+            lsm_uat_set_user_view();
             $_SESSION[$view_key] = time();
         }
     }
@@ -76,7 +79,7 @@ function uat_trigger_set_user_view() {
 /**
  * Track Post Creation and Updates for Specific Users.
  */
-function uat_track_user_post_activity($post_id, $post, $update) {
+function lsm_uat_track_user_post_activity($post_id, $post, $update) {
     // Check if it's a valid post and not an auto-save.
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
@@ -88,10 +91,7 @@ function uat_track_user_post_activity($post_id, $post, $update) {
     // Get the author data
     $author = get_userdata($author_id);
 
-    // Eastern Time Zone
-    //$timezone = new DateTimeZone('America/New_York');
-    //$datetime = new DateTime('now', $timezone);
-    //$timestamp = $datetime->format('Y-m-d H:i:s');
+    // Create timestamp in UTC
     $datetime = new DateTime('now', new DateTimeZone('UTC'));
     $timestamp = $datetime->format('Y-m-d H:i:s');
 
@@ -107,7 +107,7 @@ function uat_track_user_post_activity($post_id, $post, $update) {
     );
 
     // Get existing activity data or create an empty array.
-    $user_activity = get_user_meta($author_id, 'user_post_activity', true);
+    $user_activity = get_user_meta($author_id, 'lsm_uat_user_post_activity', true);
     if (empty($user_activity) || !is_array($user_activity)) {
         $user_activity = array();
     }
@@ -121,25 +121,25 @@ function uat_track_user_post_activity($post_id, $post, $update) {
     }
 
     // Update the user metadata.
-    update_user_meta($author_id, 'user_post_activity', $user_activity);
+    update_user_meta($author_id, 'lsm_uat_user_post_activity', $user_activity);
 }
 
-add_action('save_post', 'uat_track_user_post_activity', 10, 3);
+add_action('save_post', 'lsm_uat_track_user_post_activity', 10, 3);
 
 /**
  * Track User Profile Changes (Display Name, Social Metadata, Bio, Website).
  */
-function uat_track_user_profile_changes($user_id) {
+function lsm_uat_track_user_profile_changes($user_id) {
     $user = get_userdata($user_id);
 
     // Get old values or set defaults if they don't exist
-    $old_display_name = get_user_meta($user_id, '_uat_old_display_name', true) ?: '';
-    $old_nickname = get_user_meta($user_id, '_uat_old_nickname', true) ?: '';
-    $old_nicename = get_user_meta($user_id, '_uat_old_nicename', true) ?: '';
-    $old_social_meta = get_user_meta($user_id, '_uat_old_social_meta', true) ?: array();
-    $old_bio = get_user_meta($user_id, '_uat_old_bio', true) ?: '';
-    $old_website = get_user_meta($user_id, '_uat_old_website', true) ?: '';
-    $old_contact_methods = get_user_meta($user_id, '_uat_old_contact_methods', true) ?: array();
+    $old_display_name = get_user_meta($user_id, '_lsm_uat_old_display_name', true) ?: '';
+    $old_nickname = get_user_meta($user_id, '_lsm_uat_old_nickname', true) ?: '';
+    $old_nicename = get_user_meta($user_id, '_lsm_uat_old_nicename', true) ?: '';
+    $old_social_meta = get_user_meta($user_id, '_lsm_uat_old_social_meta', true) ?: array();
+    $old_bio = get_user_meta($user_id, '_lsm_uat_old_bio', true) ?: '';
+    $old_website = get_user_meta($user_id, '_lsm_uat_old_website', true) ?: '';
+    $old_contact_methods = get_user_meta($user_id, '_lsm_uat_old_contact_methods', true) ?: array();
 
     // Get all social metadata
     $social_meta = array(
@@ -176,9 +176,6 @@ function uat_track_user_profile_changes($user_id) {
 
     if ($old_display_name !== $user->display_name || $old_nickname !== $nickname || $old_nicename !== $nicename || serialize($old_social_meta) !== serialize($social_meta) || $old_bio !== $bio || $old_website !== $website || serialize($old_contact_methods) !== serialize($user_contact_values)) {
         // Log the change
-        //$timezone = new DateTimeZone('America/New_York');
-        //$datetime = new DateTime('now', $timezone);
-        //$timestamp = $datetime->format('Y-m-d H:i:s');
         $datetime = new DateTime('now', new DateTimeZone('UTC'));
         $timestamp = $datetime->format('Y-m-d H:i:s');
 
@@ -200,7 +197,7 @@ function uat_track_user_profile_changes($user_id) {
             'old_contact_methods' => $old_contact_methods,
         );
 
-        $user_profile_changes = get_user_meta($user_id, 'user_profile_changes', true);
+        $user_profile_changes = get_user_meta($user_id, 'lsm_uat_user_profile_changes', true);
         if (empty($user_profile_changes) || !is_array($user_profile_changes)) {
             $user_profile_changes = array();
         }
@@ -208,28 +205,24 @@ function uat_track_user_profile_changes($user_id) {
         if (count($user_profile_changes) > 10) {
             array_shift($user_profile_changes);
         }
-        update_user_meta($user_id, 'user_profile_changes', $user_profile_changes);
+        update_user_meta($user_id, 'lsm_uat_user_profile_changes', $user_profile_changes);
 
         // Update the old values for future comparison
-        update_user_meta($user_id, '_uat_old_display_name', $user->display_name);
-        update_user_meta($user_id, '_uat_old_nickname', $nickname);
-        update_user_meta($user_id, '_uat_old_nicename', $nicename);
-        update_user_meta($user_id, '_uat_old_social_meta', $social_meta);
-        update_user_meta($user_id, '_uat_old_bio', $bio);
-        update_user_meta($user_id, '_uat_old_website', $website);
-        update_user_meta($user_id, '_uat_old_contact_methods', $user_contact_values);
+        update_user_meta($user_id, '_lsm_uat_old_display_name', $user->display_name);
+        update_user_meta($user_id, '_lsm_uat_old_nickname', $nickname);
+        update_user_meta($user_id, '_lsm_uat_old_nicename', $nicename);
+        update_user_meta($user_id, '_lsm_uat_old_social_meta', $social_meta);
+        update_user_meta($user_id, '_lsm_uat_old_bio', $bio);
+        update_user_meta($user_id, '_lsm_uat_old_website', $website);
+        update_user_meta($user_id, '_lsm_uat_old_contact_methods', $user_contact_values);
     }
 }
-add_action('profile_update', 'uat_track_user_profile_changes');
+add_action('profile_update', 'lsm_uat_track_user_profile_changes');
 
 /**
  * Track Social Login Activity (WSL).
  */
-function uat_track_wsl_login_activity($user_id) {
-    // Eastern Time Zone
-    //$timezone = new DateTimeZone('America/New_York');
-    //$datetime = new DateTime('now', $timezone);
-    //$timestamp = $datetime->format('Y-m-d H:i:s');
+function lsm_uat_track_wsl_login_activity($user_id) {
     $datetime = new DateTime('now', new DateTimeZone('UTC'));
     $timestamp = $datetime->format('Y-m-d H:i:s');
     $ip_address = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
@@ -239,7 +232,7 @@ function uat_track_wsl_login_activity($user_id) {
         'ip_address' => $ip_address, // Get user's IP address
     );
 
-    $user_logins = get_user_meta($user_id, 'user_logins', true);
+    $user_logins = get_user_meta($user_id, 'lsm_uat_user_logins', true);
     if (empty($user_logins) || !is_array($user_logins)) {
         $user_logins = array();
     }
@@ -250,31 +243,26 @@ function uat_track_wsl_login_activity($user_id) {
         array_shift($user_logins);
     }
 
-    update_user_meta($user_id, 'user_logins', $user_logins);
+    update_user_meta($user_id, 'lsm_uat_user_logins', $user_logins);
 }
-add_action('wsl_process_login', 'uat_track_wsl_login_activity');
+add_action('wsl_process_login', 'lsm_uat_track_wsl_login_activity');
 
 /**
  * Track Login Activity.
  */
-function uat_track_login_activity($user_login, $user) {
+function lsm_uat_track_login_activity($user_login, $user) {
     $user_id = $user->ID;
 
-    // Eastern Time Zone
-    //$timezone = new DateTimeZone('America/New_York');
-    //$datetime = new DateTime('now', $timezone);
-    //$timestamp = $datetime->format('Y-m-d H:i:s');
     $datetime = new DateTime('now', new DateTimeZone('UTC'));
     $timestamp = $datetime->format('Y-m-d H:i:s');
     $ip_address = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
-
 
     $login_data = array(
         'timestamp' => $timestamp,
         'ip_address' => $ip_address, // Get user's IP address
     );
 
-    $user_logins = get_user_meta($user_id, 'user_logins', true);
+    $user_logins = get_user_meta($user_id, 'lsm_uat_user_logins', true);
     if (empty($user_logins) || !is_array($user_logins)) {
         $user_logins = array();
     }
@@ -285,21 +273,17 @@ function uat_track_login_activity($user_login, $user) {
         array_shift($user_logins);
     }
 
-    update_user_meta($user_id, 'user_logins', $user_logins);
+    update_user_meta($user_id, 'lsm_uat_user_logins', $user_logins);
 }
-add_action('wp_login', 'uat_track_login_activity', 10, 2);
+add_action('wp_login', 'lsm_uat_track_login_activity', 10, 2);
 
 /**
  * Track Logout Activity.
  */
-function uat_track_logout_activity() {
+function lsm_uat_track_logout_activity() {
     $user_id = get_current_user_id();
 
     if ($user_id) {
-        // Eastern Time Zone
-        //$timezone = new DateTimeZone('America/New_York');
-        //$datetime = new DateTime('now', $timezone);
-        //$timestamp = $datetime->format('Y-m-d H:i:s');
         $datetime = new DateTime('now', new DateTimeZone('UTC'));
         $timestamp = $datetime->format('Y-m-d H:i:s');
 
@@ -307,7 +291,7 @@ function uat_track_logout_activity() {
             'timestamp' => $timestamp,
         );
 
-        $user_logouts = get_user_meta($user_id, 'user_logouts', true);
+        $user_logouts = get_user_meta($user_id, 'lsm_uat_user_logouts', true);
         if (empty($user_logouts) || !is_array($user_logouts)) {
             $user_logouts = array();
         }
@@ -318,23 +302,19 @@ function uat_track_logout_activity() {
             array_shift($user_logouts);
         }
 
-        update_user_meta($user_id, 'user_logouts', $user_logouts);
+        update_user_meta($user_id, 'lsm_uat_user_logouts', $user_logouts);
     }
 }
-add_action('wp_logout', 'uat_track_logout_activity');
+add_action('wp_logout', 'lsm_uat_track_logout_activity');
 
 /**
  * Track WooCommerce Purchase Activity (Individual Products).
  */
-function uat_track_purchase_activity($order_id) {
+function lsm_uat_track_purchase_activity($order_id) {
     $order = wc_get_order($order_id);
     $user_id = $order->get_user_id();
 
     if ($user_id) {
-        // Eastern Time Zone
-        //$timezone = new DateTimeZone('America/New_York');
-        //$datetime = new DateTime('now', $timezone);
-        //$timestamp = $datetime->format('Y-m-d H:i:s');
         $datetime = new DateTime('now', new DateTimeZone('UTC'));
         $timestamp = $datetime->format('Y-m-d H:i:s');
 
@@ -351,7 +331,7 @@ function uat_track_purchase_activity($order_id) {
                     'post_type' => $product->get_type(),
                 );
 
-                $user_purchases = get_user_meta($user_id, 'user_purchases', true);
+                $user_purchases = get_user_meta($user_id, 'lsm_uat_user_purchases', true);
                 if (empty($user_purchases) || !is_array($user_purchases)) {
                     $user_purchases = array();
                 }
@@ -362,21 +342,21 @@ function uat_track_purchase_activity($order_id) {
                     array_shift($user_purchases);
                 }
 
-                update_user_meta($user_id, 'user_purchases', $user_purchases);
+                update_user_meta($user_id, 'lsm_uat_user_purchases', $user_purchases);
             }
         }
     }
 }
-add_action('woocommerce_order_status_completed', 'uat_track_purchase_activity');
+add_action('woocommerce_order_status_completed', 'lsm_uat_track_purchase_activity');
 
 /**
  * All Activity.
  */
-function uat_get_combined_user_data($user_id) {
+function lsm_uat_get_combined_user_data($user_id) {
     $combined_data = array();
 
     // Post Views
-    $views = get_user_meta($user_id, 'user_post_views', true);
+    $views = get_user_meta($user_id, 'lsm_uat_user_post_views', true);
     if (!empty($views) && is_array($views)) {
         foreach ($views as $view) {
             $combined_data[] = array(
@@ -388,7 +368,7 @@ function uat_get_combined_user_data($user_id) {
     }
 
     // Post Activity
-    $activity = get_user_meta($user_id, 'user_post_activity', true);
+    $activity = get_user_meta($user_id, 'lsm_uat_user_post_activity', true);
     if (!empty($activity) && is_array($activity)) {
         foreach ($activity as $act) {
             $combined_data[] = array(
@@ -400,7 +380,7 @@ function uat_get_combined_user_data($user_id) {
     }
 
     // Profile Changes
-    $profile_changes = get_user_meta($user_id, 'user_profile_changes', true);
+    $profile_changes = get_user_meta($user_id, 'lsm_uat_user_profile_changes', true);
     if (!empty($profile_changes) && is_array($profile_changes)) {
         foreach ($profile_changes as $change) {
             $combined_data[] = array(
@@ -412,7 +392,7 @@ function uat_get_combined_user_data($user_id) {
     }
 
     // Purchases
-    $purchases = get_user_meta($user_id, 'user_purchases', true);
+    $purchases = get_user_meta($user_id, 'lsm_uat_user_purchases', true);
     if (!empty($purchases) && is_array($purchases)) {
         foreach ($purchases as $purchase) {
             $combined_data[] = array(
@@ -424,7 +404,7 @@ function uat_get_combined_user_data($user_id) {
     }
 
     // Logins
-    $logins = get_user_meta($user_id, 'user_logins', true);
+    $logins = get_user_meta($user_id, 'lsm_uat_user_logins', true);
     if (!empty($logins) && is_array($logins)) {
         foreach ($logins as $login) {
             $combined_data[] = array(
@@ -436,7 +416,7 @@ function uat_get_combined_user_data($user_id) {
     }
 
     // Logouts
-    $logouts = get_user_meta($user_id, 'user_logouts', true);
+    $logouts = get_user_meta($user_id, 'lsm_uat_user_logouts', true);
     if (!empty($logouts) && is_array($logouts)) {
         foreach ($logouts as $logout) {
             $combined_data[] = array(
@@ -450,7 +430,7 @@ function uat_get_combined_user_data($user_id) {
     return $combined_data;
 }
 
-function uat_add_timezone_cookie_script() {
+function lsm_uat_add_timezone_cookie_script() {
     if (!isset($_COOKIE['lsm_browser_time_zone'])) {
         ?>
         <script type="text/javascript">
@@ -461,21 +441,9 @@ function uat_add_timezone_cookie_script() {
         <?php
     }
 }
-add_action('wp_head', 'uat_add_timezone_cookie_script');
+add_action('wp_head', 'lsm_uat_add_timezone_cookie_script');
 
-/*
-function uat_sort_combined_data($a, $b) {
-    return strtotime($b['timestamp']) - strtotime($a['timestamp']);
-}
-
-function uat_sort_combined_data($a, $b) {
-    $datetime_a = new DateTime($a['timestamp']);
-    $datetime_b = new DateTime($b['timestamp']);
-    return $datetime_b->getTimestamp() - $datetime_a->getTimestamp();
-}
-*/
-
-function uat_sort_combined_data($a, $b) {
+function lsm_uat_sort_combined_data($a, $b) {
     // Get timestamps from both items
     $time_a = strtotime($a['timestamp']);
     $time_b = strtotime($b['timestamp']);
@@ -493,7 +461,7 @@ function uat_sort_combined_data($a, $b) {
     }
 }
 
-function uat_display_combined_data_shortcode($atts) {
+function lsm_uat_display_combined_data_shortcode($atts) {
     $atts = shortcode_atts(array(
         'user_id' => get_current_user_id(),
     ), $atts);
@@ -503,8 +471,8 @@ function uat_display_combined_data_shortcode($atts) {
         return '<p>Invalid user ID.</p>';
     }
 
-    $combined_data = uat_get_combined_user_data($user_id);
-    usort($combined_data, 'uat_sort_combined_data');
+    $combined_data = lsm_uat_get_combined_user_data($user_id);
+    usort($combined_data, 'lsm_uat_sort_combined_data');
 
     if (empty($combined_data)) {
         return '<p>No user activity found.</p>';
@@ -515,21 +483,6 @@ function uat_display_combined_data_shortcode($atts) {
 
     foreach ($combined_data as $item) {
         $output .= '<li>';
-        //$timestamp = esc_html($item['timestamp']);
-        //$date = date('Y-m-d', strtotime($timestamp));
-        //$time = date('H:i:s', strtotime($timestamp));
-        //$type = esc_html($item['type']);
-        //$data = $item['data'];
-
-        //$timestamp = strtotime($item['timestamp']);
-
-        //$timezone = new DateTimeZone('America/New_York');
-        //$datetime = new DateTime("@$timestamp");
-        //$datetime->setTimezone($timezone);
-
-        //$stored_timezone = new DateTimeZone('America/New_York'); // The timezone that the timestamp is stored in.
-        //$stored_datetime = new DateTime("@$timestamp", $stored_timezone);
-
         $utc_timestamp = $item['timestamp'];
         $utc_datetime = new DateTime($utc_timestamp, new DateTimeZone('UTC'));
 
@@ -560,14 +513,6 @@ function uat_display_combined_data_shortcode($atts) {
         }
 
         $user_datetime = $utc_datetime->setTimezone($user_timezone);
-
-        //$day_of_week = $datetime->format('D'); // Abbreviated day of the week
-        //$date = $datetime->format('F j, Y'); // Month Day, Year
-        //$time = $datetime->format('h:i:s A');
-        //$day_of_week = $stored_datetime->format('D');
-        //$date = $stored_datetime->format('F j, Y');
-        //$time = $stored_datetime->format('h:i:s A');
-        //$timezone_abbr = $user_datetime->format('T'); // Timezone abbreviation
 
         $day_of_week = $user_datetime->format('D');
         $date = $user_datetime->format('F j, Y');
@@ -641,28 +586,28 @@ function uat_display_combined_data_shortcode($atts) {
     $output .= '</ul>';
     return $output;
 }
-add_shortcode('uat_combined_data', 'uat_display_combined_data_shortcode');
+add_shortcode('lsm_uat_combined_data', 'lsm_uat_display_combined_data_shortcode');
 
 
-function uat_reset_all_user_view_data() {
+function lsm_uat_reset_all_user_view_data() {
     global $wpdb;
     
     // Delete all user_post_views meta entries
-    $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'user_post_views'");
+    $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'lsm_uat_user_post_views'");
     
     // Optional: Also clear the other tracking data if needed
-    $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'user_post_activity'");
-    // $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'user_profile_changes'");
-    // $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'user_purchases'");
-    // $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'user_logins'");
-    // $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'user_logouts'");
+    $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'lsm_uat_user_post_activity'");
+    // $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'lsm_uat_user_profile_changes'");
+    // $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'lsm_uat_user_purchases'");
+    // $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'lsm_uat_user_logins'");
+    // $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key = 'lsm_uat_user_logouts'");
     
     return true;
 }
 
 add_action('admin_init', function() {
     // Uncomment the next line to run the reset (then comment it back after running once)
-    //uat_reset_all_user_view_data();
+    //lsm_uat_reset_all_user_view_data();
 });
 
 if (isset($_COOKIE['lsm_browser_time_zone'])) {
