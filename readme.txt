@@ -1,8 +1,8 @@
 === LSM User Activity Tracker ===
-Contributors: Leadstart Media, Inc.
+Contributors: leadstartmedia
 Stable tag: 1.0.0
 Requires at least: 5.0
-Tested up to: 6.7.1
+Tested up to: 6.7
 Requires PHP: 7.0
 License: GPLv2 or later
 Tags: user activity, user tracking, profile changes, login tracking, purchase tracking
@@ -29,14 +29,14 @@ Key Features:
 
 Shortcode:
 
-* `[uat_combined_data]` - Displays all tracked user activity for the current user.
-* `[uat_combined_data user_id="123"]` - Displays all tracked user activity for the specified user ID (replace "123" with the actual user ID).
+* `[lsm_uat_combined_data]` - Displays all tracked user activity for the current user.
+* `[lsm_uat_combined_data user_id="123"]` - Displays all tracked user activity for the specified user ID (replace "123" with the actual user ID).
 
 == Installation ==
 
 1.  Upload the `user-activity-tracker` directory to the `/wp-content/plugins/` directory.
 2.  Activate the User Activity Tracker plugin through the `Plugins` menu in WordPress.
-3.  Use the `[uat_combined_data]` shortcode to display the combined user activity.
+3.  Use the `[lsm_uat_combined_data]` shortcode to display the combined user activity.
 
 == Changelog ==
 
@@ -55,4 +55,3 @@ Shortcode:
 * Separated date and time in output.
 * Added post type with <small> tag.
 * Added profile change display only when changed.
-
